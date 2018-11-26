@@ -42,8 +42,10 @@ def load_kdd(filename):
 
 def create_coreset(m):
   print("Creating lightweight coreset...")
-	
+  print("---Finding the mean of the data...")
+  #-------------------------------------
   #1. Find mu = mean of data points X
+  #-------------------------------------
   mean = []
   total_number = 0
   
@@ -51,26 +53,42 @@ def create_coreset(m):
     for example in blocks[block].examples:
       #if mean is empty, create initial values
       if total_number == 0:
-        mean.append(int(0)) #parent_id
-        mean.append(int(0)) #example_id
-        mean.append(int(0)) #protein_class
         for i in range(len(example.features)):
           mean.append(float(0))
       
       #add up example values to mean array
-      mean[0] += example.parent
-      mean[1] += example.id
-      mean[2] += example.protein_class
       for i in range(len(example.features)):
-        mean[3+i] += example.features[i]
+        mean[i] += example.features[i]
       
       total_number += 1
-  
   #Once mean array is populated, calculate means
   for i in range(len(mean)):
     mean[i] /= total_number
-    
-  #2. 
+
+  #-------------------------------------
+  #2. Create summation of distances d(x,mean)^2 array
+  #-------------------------------------
+  print("---Finding differences squared sum between the mean and data values...")
+  distances_sum = [] #each value represents the summation of differences between the mean and each value in the dataset squared
+  initialized = 0
+  
+  #Sum up differences for each example, square it, and add to array
+  for block in blocks:
+    for example in blocks[block].examples:  
+      #Initialize distances_sum array
+      if initialized == 0:
+        for i in range(len(example.features)):
+          distances_sum.append(float(0))
+        initialized = 1
+        
+      #Add new distance^2 to array's existing value
+      for i in range(len(example.features)):
+        distances_sum[i] += abs((mean[i]-example.features[i])**2)
+  
+  #-------------------------------------
+  #3. Create q(x) probability for each example in dataset
+  #-------------------------------------
+  print("---Creating q(x) probability array...")
   print("Coreset creation complete.\n")
   
 def export_coreset():
