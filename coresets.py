@@ -26,20 +26,50 @@ def load_kdd(filename):
     for line in kdd_set:
       values = line.split()
       
-      block_id = values[0]        #First value is Block ID, multiple lines per Block ID
-      example_id = values[1]      #Second value is Example ID, unique per line
-      protein_class = values[2]   #Third value is Protein Class (the desired answer)
-      feature_values = values[3:] #Remaining 74 values are feature values/data
+      #string values are converted into proper types and inserted
+      block_id = int(values[0])        #First value is Block ID, multiple lines per Block ID
+      example_id = int(values[1])      #Second value is Example ID, unique per line
+      protein_class = int(values[2])   #Third value is Protein Class (the desired answer)
+      feature_values = values[3:]        #Remaining 74 values are feature values/data
+      for i in range(len(feature_values)):
+        feature_values[i] = float(feature_values[i])
       
       if block_id not in blocks:
         blocks[block_id] = Block(block_id)
 
       blocks[block_id].addExample(Example(block_id,example_id,protein_class,feature_values))
   print("Reading complete.\n")    
+
 def create_coreset(m):
   print("Creating lightweight coreset...")
-	#1. Find mu = mean of data points X
+	
+  #1. Find mu = mean of data points X
+  mean = []
+  total_number = 0
   
+  for block in blocks:
+    for example in blocks[block].examples:
+      #if mean is empty, create initial values
+      if total_number == 0:
+        mean.append(int(0)) #parent_id
+        mean.append(int(0)) #example_id
+        mean.append(int(0)) #protein_class
+        for i in range(len(example.features)):
+          mean.append(float(0))
+      
+      #add up example values to mean array
+      mean[0] += example.parent
+      mean[1] += example.id
+      mean[2] += example.protein_class
+      for i in range(len(example.features)):
+        mean[3+i] += example.features[i]
+      
+      total_number += 1
+  
+  #Once mean array is populated, calculate means
+  for i in range(len(mean)):
+    mean[i] /= total_number
+    
   #2. 
   print("Coreset creation complete.\n")
   
@@ -49,9 +79,9 @@ def export_coreset():
   print("Exporting lightweight coreset...")
   for block in blocks:
     for example in blocks[block].examples:
-      export_file.write(new_line+example.parent+'\t'+example.id+'\t'+example.protein_class)
+      export_file.write(new_line+str(example.parent)+'\t'+str(example.id)+'\t'+str(example.protein_class))
       for value in example.features:
-        export_file.write('\t'+value)
+        export_file.write('\t'+str(value))
       new_line = '\n' #every line after the first has a newline printed
   export_file.close()
   print("Export complete.")
