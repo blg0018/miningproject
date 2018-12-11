@@ -127,16 +127,16 @@ def create_coreset(m):
   print("Coreset creation complete.\n")
   
   
-#Takes the coreset and writes it to a new file called export.dat  
+#Takes the coreset and writes it to a new file called export.csv  
 def export_coreset():
   new_line = '' #prevents a newline being printed at the beginning
-  export_file = open("export.dat", "w+")
+  export_file = open("export.csv", "w+")
   print("Exporting lightweight coreset...")
   for id_value in coreset:
     datapoint = datapoints[id_value]
-    export_file.write(new_line+str(datapoint.block)+'\t'+str(datapoint.id)+'\t'+str(datapoint.protein_class))
+    export_file.write(new_line+str(datapoint.block)+','+str(datapoint.id)+','+str(datapoint.protein_class))
     for value in datapoint.features:
-      export_file.write('\t'+str(value))
+      export_file.write(','+str(value))
     new_line = '\n' #every line after the first has a newline printed
   export_file.close()
   print("Export complete.")  
