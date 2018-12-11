@@ -3,6 +3,8 @@
 #   Protein class is 1 if homologous to the native sequence, 0 if non-homologous(decoys)
 
 import sys
+import random
+import time
 
 #Each Data_Point corresponds to each line in the dataset
 class Data_Point:
@@ -101,8 +103,27 @@ def create_coreset(m):
   #-------------------------------------
   #4. Sample m weighted points for coreset using probability distribution
   #-------------------------------------
+  print("---Sampling",m,"points to be used in lightweight coreset")
   
-  
+  #Generate weights 1/(m*q(x))
+  for i in range(len(q)):
+    weight = 1/(float(m)*q[i])
+    q[i] = weight
+  #Error checking so m is not more than total dataset
+  if int(m) >= total_number:
+    for i in range(len(q)):
+      coreset.append(i)
+  else:
+    #Sample m datapoints based on weights in q
+    
+    id_list = list(range(len(datapoints))) #Create a list of ids for all datapoints
+    for i in range(int(m)):
+      #From a list of all ids of datapoints, use weights q to sample a single datapoint id and add it to the coreset id list
+      selected_id = random.choices(id_list, q)[0] #returns a list with only 1 value, so we take the first value
+      coreset.append(selected_id)
+      
+      #Make the chosen id's weight zero so it doesn't get chosen again
+      q[selected_id] = 0.0
   print("Coreset creation complete.\n")
   
   
@@ -111,7 +132,8 @@ def export_coreset():
   new_line = '' #prevents a newline being printed at the beginning
   export_file = open("export.dat", "w+")
   print("Exporting lightweight coreset...")
-  for datapoint in datapoints:
+  for id_value in coreset:
+    datapoint = datapoints[id_value]
     export_file.write(new_line+str(datapoint.block)+'\t'+str(datapoint.id)+'\t'+str(datapoint.protein_class))
     for value in datapoint.features:
       export_file.write('\t'+str(value))
@@ -122,7 +144,9 @@ def export_coreset():
 #-------------------------------------
 #-----------Main Code Block-----------
 #-------------------------------------
+start_time = time.time()
 datapoints = [] #Master list of all data points
+coreset = []    #ids of selected datapoints for coreset
 
 #parameter checking and assignment
 if len(sys.argv) != 3:
@@ -136,3 +160,4 @@ else:
 load_kdd(filename)  #load dataset
 create_coreset(m)   #create corresponding lightweight coreset with size m
 export_coreset()    #export finished lightweight coreset
+print('\n'+"Elapsed Program Time:",(time.time()-start_time),"seconds.")
