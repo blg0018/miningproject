@@ -37,7 +37,7 @@ def create_coreset(m):
   #-------------------------------------
   #1. Find mu = mean of data points X
   #-------------------------------------
-  mean = []
+  mean = [] #mean value for each of the values associated with a datapoint
   total_number = 0
   
   for datapoint in datapoints:
@@ -57,24 +57,36 @@ def create_coreset(m):
     mean[i] /= total_number
 
   #-------------------------------------
-  #2. Create summation of distances d(x,mean)^2 array
+  #2. Create summation of distances d(x,mean)^2 
   #-------------------------------------
   print("---Finding differences squared sum between the mean and data values...")
   distances_sum = [] #each value represents the summation of differences between the mean and each value in the dataset squared
+  distances = []     #Separate array keeping d(x,mu)^2 for each of the datapoints
   initialized = 0
   
-  #Sum up differences for each example, square it, and add to array
+  #Sum up differences for each example, and add to array
   for datapoint in datapoints:  
     #Initialize distances_sum array
     if initialized == 0:
       for i in range(len(datapoint.features)):
         distances_sum.append(float(0))
       initialized = 1
-        
-    #Add new distance^2 to array's existing value
+    
+    temp_distance = 0.0 #Reset distance value for each of the datapoints
+    
+    #Add new distance to distances_sum array's existing value and to temp_distance
     for i in range(len(datapoint.features)):
-      distances_sum[i] += abs((mean[i]-datapoint.features[i])**2)
-
+      distances_sum[i] += abs(mean[i]-datapoint.features[i])
+      temp_distance += abs(mean[i]-datapoint.features[i])
+    
+    distances.append(temp_distance**2) #Add the current datapoint's d(x,mu)^2, useful in second part of probability equation creation
+  
+  #Calculate total distance from mean for second part of probability equation and then square it
+  total_distance = 0.0
+  for value in distances_sum:
+    total_distance += value
+  total_distance = total_distance**2
+  
   #-------------------------------------
   #3. Create q(x) probability for each example in dataset
   #-------------------------------------
@@ -82,8 +94,14 @@ def create_coreset(m):
   q = []
   uniform_distribution = 0.5*(1/float(total_number)) #Used in first part of probability equation
   
-  #for i in range(len(datapoints)):
-    
+  #Algorithm step 3: create probability distribution
+  for i in range(len(datapoints)):
+    q.append(uniform_distribution+0.5*(distances[i]/total_distance))
+  
+  #-------------------------------------
+  #4. Sample m weighted points for coreset using probability distribution
+  #-------------------------------------
+  
   
   print("Coreset creation complete.\n")
   
